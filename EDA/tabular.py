@@ -1,5 +1,5 @@
 from itertools import combinations
-from typing import List, Union
+from typing import Dict, List, Union
 
 import pandas as pd
 import plotly.express as px
@@ -45,12 +45,35 @@ def decide_tile(
         out[col] = [fill_l, fill_u]
     return out
 
+def show_tile(
+    data: pd.DataFrame,
+    tiles: List[Union[int, float]] = [
+        0,
+        0.01,
+        0.02,
+        0.03,
+        0.05,
+        0.95,
+        0.97,
+        0.98,
+        0.99,
+        1,
+    ],
+):
+    df_tile = data.quantile(tiles)
+    return df_tile
+
 
 def fill_tile(
     data: pd.DataFrame,
     tiles: List[Union[int, float]],
+    is_interactive: bool = False,
+    fills_given: Dict[str, List[float]] = None
 ):
-    fills = decide_tile(data, tiles)
+    if is_interactive:
+        fills = decide_tile(data, tiles)
+    else:
+        fills = fills_given
     out = data.copy()
     for col in data.columns:
         out.loc[out[col] < fills[col][0], col] = fills[col][0]
@@ -73,8 +96,10 @@ def plot_filled_dist2d(
         0.99,
         1,
     ],
+    is_interactive: bool = False,
+    fills_given: Dict[str, List[float]] = None
 ):
-    df_filled = fill_tile(data[cols], tiles)
+    df_filled = fill_tile(data[cols], tiles, is_interactive, fills_given)
     col_combs = combinations(cols, 2)
     for comb in col_combs:
         fig = px.density_heatmap(
