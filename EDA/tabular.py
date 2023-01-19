@@ -12,6 +12,8 @@ def plot_ctgry_vs_ctgries(
     target_cols: List[str],
     category_cols: List[str],
     horizontal_spacing: Union[int, float] = 0.2,
+    agg_col: str = "colname",
+    agg_type: str = "sum"
 ):
     for tgt_col in target_cols:
         fig = make_subplots(
@@ -21,7 +23,7 @@ def plot_ctgry_vs_ctgries(
             subplot_titles=category_cols,
         )
         for idx, ctgry_col in enumerate(category_cols):
-            data_ct = pd.crosstab(data[tgt_col], data[ctgry_col], normalize="columns")
+            data_ct = pd.crosstab(data[tgt_col], data[ctgry_col], normalize="columns", values=data[agg_col], aggfunc=agg_type)
             fig.add_trace(go.Heatmap(z=data_ct), 1, idx + 1)
         fig.update_traces(showscale=False)
         fig.update_layout(title=f"{tgt_col} vs {category_cols}")
@@ -53,6 +55,9 @@ def show_tile(
         0.02,
         0.03,
         0.05,
+        0.25,
+        0.5,
+        0.75,
         0.95,
         0.97,
         0.98,
@@ -111,3 +116,15 @@ def plot_filled_dist2d(
         )
         fig.show()
     return
+
+def summarize_bin(data: pd.DataFrame, cols: List[str], num_bins: int = 100):
+    def _bin_col(data: pd.DataFrame, bin_col:str, num_bins=num_bins):
+        data[f"{bin_col}_bin{num_bins}"] = pd.qcut(data[bin_col], num_bins, labels=False)
+        return out
+
+    out = data.copy()
+    for col in cols:
+        out = _bin_col(out, col)
+
+    return out
+    
